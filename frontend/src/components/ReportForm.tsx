@@ -1,20 +1,46 @@
 import React from "react";
 
-interface ReportFormProps {
-  onSubmit: (message: string) => void;
-}
-
-const ReportForm: React.FC<ReportFormProps> = ({ onSubmit }) => {
-  const [message, setMessage] = React.useState("");
+const ReportForm: React.FC = () => {
+  const [title, setTitle] = React.useState("");
+  const [description, setDescription] = React.useState("");
+  const [contact, setContact] = React.useState("");
   const [sent, setSent] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (message.trim().length === 0) return;
-    onSubmit(message);
-    setMessage("");
-    setSent(true);
-    setTimeout(() => setSent(false), 3000);
+    setError(null);
+
+    if (title.trim().length === 0 || description.trim().length === 0) {
+      setError("Tytuł i opis są wymagane.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:3000/api/v1/report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          contact,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Błąd przy wysyłaniu zgłoszenia");
+      }
+
+      setTitle("");
+      setDescription("");
+      setContact("");
+      setSent(true);
+      setTimeout(() => setSent(false), 3000);
+    } catch (err: any) {
+      setError(err.message || "Nie udało się wysłać zgłoszenia.");
+    }
   };
 
   return (
@@ -37,7 +63,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSubmit }) => {
           overflow: "hidden",
         }}
       >
-        {/* Decorative gradient */}
+        {/* Gradient */}
         <div
           style={{
             position: "absolute",
@@ -76,7 +102,38 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSubmit }) => {
             />
           </h2>
 
-          <div style={{ marginBottom: "2rem" }}>
+          {/* Tytuł */}
+          <div style={{ marginBottom: "1.5rem" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.8rem",
+                fontSize: "1.1rem",
+                fontWeight: "600",
+                color: "#606c38",
+                textAlign: "left",
+              }}
+            >
+              Tytuł zgłoszenia
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Krótki tytuł zgłoszenia"
+              style={{
+                width: "100%",
+                border: "2px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "1rem",
+                fontSize: "1rem",
+                background: "#fefae0",
+              }}
+            />
+          </div>
+
+          {/* Opis */}
+          <div style={{ marginBottom: "1.5rem" }}>
             <label
               style={{
                 display: "block",
@@ -90,87 +147,79 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSubmit }) => {
               Opisz sytuację
             </label>
             <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Opisz dokładnie sytuację, której jesteś świadkiem. Im więcej szczegółów, tym lepiej możemy pomóc..."
-              rows={8}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Opisz dokładnie sytuację..."
+              rows={6}
               style={{
                 width: "100%",
                 border: "2px solid #e5e7eb",
                 borderRadius: "12px",
                 padding: "1.2rem",
                 fontSize: "1rem",
-                fontFamily: "inherit",
-                lineHeight: "1.6",
-                resize: "vertical",
-                minHeight: "150px",
-                transition: "all 0.3s ease",
                 background: "#fefae0",
-                color: "#283618",
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#bc6c25";
-                e.target.style.boxShadow = "0 0 0 3px rgba(188, 108, 37, 0.1)";
-                e.target.style.background = "white";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#e5e7eb";
-                e.target.style.boxShadow = "none";
-                e.target.style.background = "#fefae0";
               }}
             />
           </div>
 
+          {/* Kontakt */}
+          <div style={{ marginBottom: "2rem" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.8rem",
+                fontSize: "1.1rem",
+                fontWeight: "600",
+                color: "#606c38",
+                textAlign: "left",
+              }}
+            >
+              Dane kontaktowe (opcjonalne)
+            </label>
+            <input
+              type="text"
+              value={contact}
+              onChange={(e) => setContact(e.target.value)}
+              placeholder="E-mail lub numer telefonu (opcjonalnie)"
+              style={{
+                width: "100%",
+                border: "2px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "1rem",
+                fontSize: "1rem",
+                background: "#fefae0",
+              }}
+            />
+          </div>
+
+          {/* Przycisk */}
           <button
             type="submit"
-            disabled={message.trim().length === 0}
+            disabled={
+              title.trim().length === 0 || description.trim().length === 0
+            }
             style={{
               width: "100%",
               padding: "1rem 2rem",
               fontSize: "1.1rem",
               fontWeight: "600",
               background:
-                message.trim().length === 0
+                title.trim().length === 0 || description.trim().length === 0
                   ? "#d1d5db"
                   : "linear-gradient(135deg, #bc6c25 0%, #dda15e 100%)",
               color: "white",
               border: "none",
               borderRadius: "12px",
-              cursor: message.trim().length === 0 ? "not-allowed" : "pointer",
-              transition: "all 0.3s ease",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              boxShadow:
-                message.trim().length === 0
-                  ? "none"
-                  : "0 4px 15px rgba(188, 108, 37, 0.3)",
-              position: "relative",
-              overflow: "hidden",
-            }}
-            onMouseEnter={(e) => {
-              if (message.trim().length > 0) {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow =
-                  "0 6px 20px rgba(188, 108, 37, 0.4)";
-                e.currentTarget.style.background =
-                  "linear-gradient(135deg, #283618 0%, #606c38 100%)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (message.trim().length > 0) {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 15px rgba(188, 108, 37, 0.3)";
-                e.currentTarget.style.background =
-                  "linear-gradient(135deg, #bc6c25 0%, #dda15e 100%)";
-              }
+              cursor:
+                title.trim().length === 0 || description.trim().length === 0
+                  ? "not-allowed"
+                  : "pointer",
             }}
           >
-            {message.trim().length === 0
-              ? "Wprowadź treść zgłoszenia"
-              : "🚀 Wyślij Zgłoszenie"}
+            🚀 Wyślij Zgłoszenie
           </button>
 
+          {/* Komunikaty */}
           {sent && (
             <div
               style={{
@@ -181,11 +230,24 @@ const ReportForm: React.FC<ReportFormProps> = ({ onSubmit }) => {
                 borderRadius: "12px",
                 textAlign: "center",
                 fontWeight: "600",
-                border: "2px solid #10b981",
-                animation: "slideIn 0.3s ease-out",
               }}
             >
               ✅ Zgłoszenie zostało wysłane pomyślnie!
+            </div>
+          )}
+          {error && (
+            <div
+              style={{
+                marginTop: "1.5rem",
+                padding: "1rem 1.5rem",
+                background: "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
+                color: "#991b1b",
+                borderRadius: "12px",
+                textAlign: "center",
+                fontWeight: "600",
+              }}
+            >
+              ❌ {error}
             </div>
           )}
         </div>
