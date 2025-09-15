@@ -1,24 +1,58 @@
 import React from "react";
 
 interface LoginFormProps {
-  onLogin: (credentials: { email: string; password: string }) => void;
+  onLogin?: (credentials: { email: string; password: string }) => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
   const [email, setEmail] = React.useState<string>("");
   const [password, setPassword] = React.useState<string>("");
-  const [sent, setSent] = React.useState<boolean>(false);
+  const [message, setMessage] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState<boolean>(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) return;
 
-    onLogin({ email, password });
+    if (!email.trim() || !password.trim()) {
+      setMessage("⚠️ Uzupełnij wszystkie pola.");
+      return;
+    }
 
-    setEmail("");
-    setPassword("");
-    setSent(true);
-    setTimeout(() => setSent(false), 3000);
+    // Walidacja domeny email
+    if (!email.endsWith("@technischools.com")) {
+      setMessage("❌ Możesz się zalogować tylko z mailem @technischools.com");
+      return;
+    }
+
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch("http://localhost:3000/api/v1/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Błąd logowania");
+      }
+
+      const data = await res.json();
+      setMessage("✅ Zalogowano pomyślnie!");
+      if (onLogin) onLogin({ email, password });
+
+      console.log("Odpowiedź API:", data);
+      setEmail("");
+      setPassword("");
+    } catch (error) {
+      setMessage("❌ Nieprawidłowy email lub hasło.");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -41,7 +75,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
           overflow: "hidden",
         }}
       >
-        {/* Decorative gradient */}
         <div
           style={{
             position: "absolute",
@@ -106,21 +139,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
                 padding: "1rem",
                 fontSize: "1rem",
                 fontFamily: "inherit",
-                transition: "all 0.3s ease",
                 background: "#fefae0",
                 color: "#283618",
               }}
               required
-              onFocus={(e) => {
-                e.target.style.borderColor = "#bc6c25";
-                e.target.style.boxShadow = "0 0 0 3px rgba(188, 108, 37, 0.1)";
-                e.target.style.background = "white";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#e5e7eb";
-                e.target.style.boxShadow = "none";
-                e.target.style.background = "#fefae0";
-              }}
             />
           </div>
 
@@ -150,28 +172,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
                 padding: "1rem",
                 fontSize: "1rem",
                 fontFamily: "inherit",
-                transition: "all 0.3s ease",
                 background: "#fefae0",
                 color: "#283618",
               }}
               required
-              onFocus={(e) => {
-                e.target.style.borderColor = "#bc6c25";
-                e.target.style.boxShadow = "0 0 0 3px rgba(188, 108, 37, 0.1)";
-                e.target.style.background = "white";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#e5e7eb";
-                e.target.style.boxShadow = "none";
-                e.target.style.background = "#fefae0";
-              }}
             />
           </div>
 
           {/* Button */}
           <button
             type="submit"
-            disabled={!email.trim() || !password.trim()}
+            disabled={loading || !email.trim() || !password.trim()}
             style={{
               width: "100%",
               padding: "1rem 2rem",
@@ -186,36 +197,30 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
               borderRadius: "12px",
               cursor:
                 !email.trim() || !password.trim() ? "not-allowed" : "pointer",
-              transition: "all 0.3s ease",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              boxShadow:
-                !email.trim() || !password.trim()
-                  ? "none"
-                  : "0 4px 15px rgba(188, 108, 37, 0.3)",
-              position: "relative",
-              overflow: "hidden",
             }}
           >
-            {!email.trim() || !password.trim()
-              ? "Uzupełnij dane"
-              : "🚀 Zaloguj się"}
+            {loading ? "⏳ Logowanie..." : "🚀 Zaloguj się"}
           </button>
 
-          {sent && (
+          {/* Wiadomość */}
+          {message && (
             <div
               style={{
                 marginTop: "1.5rem",
                 padding: "1rem 1.5rem",
-                background: "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)",
-                color: "#065f46",
+                background: message.startsWith("✅")
+                  ? "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)"
+                  : "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
+                color: message.startsWith("✅") ? "#065f46" : "#991b1b",
                 borderRadius: "12px",
                 textAlign: "center",
                 fontWeight: "600",
-                border: "2px solid #10b981",
+                border: message.startsWith("✅")
+                  ? "2px solid #10b981"
+                  : "2px solid #ef4444",
               }}
             >
-              ✅ Logowanie wysłane (symulacja)!
+              {message}
             </div>
           )}
         </div>
