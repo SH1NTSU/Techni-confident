@@ -4,6 +4,7 @@ const Footer: React.FC = () => {
   return (
     <footer
       style={{
+        width: "100%",
         background: "linear-gradient(135deg, #283618 0%, #606c38 100%)",
         color: "#fefae0",
         padding: "3rem 1rem 2rem",
@@ -16,6 +17,7 @@ const Footer: React.FC = () => {
       {/* Background pattern */}
       <div
         style={{
+          width: "100%",
           position: "absolute",
           top: 0,
           left: 0,
