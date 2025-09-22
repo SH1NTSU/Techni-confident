@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 interface Report {
   id: string;
@@ -14,13 +13,11 @@ const ReportList: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const navigate = useNavigate();
-
   const fetchReports = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:3000/api/v1/reports"); // endpoint GET wszystkich raportów
+      const res = await fetch("http://localhost:3000/api/v1/reports"); // GET wszystkich raportów
       if (!res.ok) throw new Error("Błąd przy pobieraniu raportów");
       const data = await res.json();
       setReports(data);
@@ -40,24 +37,6 @@ const ReportList: React.FC = () => {
       <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>
         📄 Lista raportów
       </h2>
-
-      {/* Przycisk do formularza zgłoszeń */}
-      <button
-        onClick={() => navigate("/report")}
-        style={{
-          marginBottom: "1rem",
-          padding: "0.8rem 1.5rem",
-          background: "linear-gradient(135deg, #bc6c25, #dda15e)",
-          border: "none",
-          borderRadius: "12px",
-          color: "white",
-          fontWeight: "600",
-          cursor: "pointer",
-          marginRight: "0.5rem",
-        }}
-      >
-        📝 Wyślij nowe zgłoszenie
-      </button>
 
       {/* Przycisk odświeżania */}
       <button
