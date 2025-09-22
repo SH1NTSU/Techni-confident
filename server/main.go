@@ -28,6 +28,15 @@ type Report struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
+type Response struct {
+	ID          int     
+	Title       string   
+	Description string   
+	Contact     string    
+	Status      string   
+	CreatedAt   time.Time
+}
+
 type User struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -36,7 +45,6 @@ type User struct {
 var db *sql.DB
 
 func main() {
-	// Load env
 	_ = godotenv.Load()
 
 	connStr := os.Getenv("POSTGRES_CONN_STRING")
@@ -50,7 +58,6 @@ func main() {
 		log.Fatal("DB connect error:", err)
 	}
 
-	// ensure tables exist
 	initDB()
 
 	// Router
@@ -63,6 +70,7 @@ func main() {
 	    r.Get("/status/{id}", getStatusHandler)
 	    r.Post("/register", registerHandler)
 	    r.Post("/login", loginHandler)
+	    r.Get("/reports", getReportsHandler)
 	})
 
 	fmt.Println("🚀 Server running on :3000")
@@ -143,7 +151,49 @@ func getStatusHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ---------------- Auth ----------------
+
+
+func getReportsHandler(w http.ResponseWriter, r *http.Request) {
+    rows, err := db.Query(`SELECT * FROM reports`)
+    if err != nil {
+        log.Println("Error querying reports:", err)
+        http.Error(w, "Database error", http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
+
+    var reports []Response
+
+    for rows.Next() {
+        var report Response
+        // adjust fields here depending on your Response struct definition
+	err := rows.Scan(
+	    &report.ID,
+	    &report.Title,
+	    &report.Description,
+	    &report.Contact,
+	    &report.Status,
+	    &report.CreatedAt,
+	)
+	if err != nil {
+            log.Println("Error scanning row:", err)
+            http.Error(w, "Database error", http.StatusInternalServerError)
+            return
+        }
+        reports = append(reports, report)
+    }
+
+    if err = rows.Err(); err != nil {
+        log.Println("Rows iteration error:", err)
+        http.Error(w, "Database error", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    if err := json.NewEncoder(w).Encode(reports); err != nil {
+        log.Println("Error encoding JSON:", err)
+    }
+}
 
 // POST /register
 func registerHandler(w http.ResponseWriter, r *http.Request) {
@@ -158,7 +208,6 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-
 	if !isTechnischoolsEmail(u.Email) {
 		http.Error(w, "Domen not allowed: ", http.StatusBadRequest)
 	}
@@ -214,7 +263,6 @@ func isTechnischoolsEmail(email string) bool {
 		return false
 	}
 
-	// check domain
 	return strings.HasSuffix(strings.ToLower(email), "@technischools.com")
 }
 
@@ -222,12 +270,10 @@ func isTechnischoolsEmail(email string) bool {
 
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Allow all origins (or replace * with your frontend URL)
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
-		// Handle preflight requests
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
