@@ -6,6 +6,7 @@ import LoginForm from "./components/loginForm";
 import RegisterForm from "./components/registerForm";
 import Footer from "./components/Footer";
 import "./App.css";
+import ReportList from "./components/ReportList";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -71,6 +72,7 @@ function App() {
           <>
             <InfoSection />
             <ReportForm />
+            <ReportList />
           </>
         )}
       </main>

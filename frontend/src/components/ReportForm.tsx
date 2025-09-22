@@ -162,36 +162,6 @@ const ReportForm: React.FC = () => {
             />
           </div>
 
-          {/* Kontakt */}
-          <div style={{ marginBottom: "2rem" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "0.8rem",
-                fontSize: "1.1rem",
-                fontWeight: "600",
-                color: "#606c38",
-                textAlign: "left",
-              }}
-            >
-              Dane kontaktowe (opcjonalne)
-            </label>
-            <input
-              type="text"
-              value={contact}
-              onChange={(e) => setContact(e.target.value)}
-              placeholder="E-mail lub numer telefonu (opcjonalnie)"
-              style={{
-                width: "100%",
-                border: "2px solid #e5e7eb",
-                borderRadius: "12px",
-                padding: "1rem",
-                fontSize: "1rem",
-                background: "#fefae0",
-              }}
-            />
-          </div>
-
           {/* Przycisk */}
           <button
             type="submit"
