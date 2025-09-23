@@ -13,6 +13,6 @@ COPY . .
 # Build the Go server
 RUN go build -o server main.go
 
-EXPOSE 8080
+EXPOSE 3000
 
 CMD ["./server"]
