@@ -1,0 +1,42 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:15
+    container_name: techni_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: vanitas
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: technic
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: technic_backend
+    restart: always
+    environment:
+      DB_HOST: db
+      DB_USER: vanitas
+      DB_PASSWORD: mysecretpassword
+      DB_NAME: technic
+      DB_PORT: 5432
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    container_name: technic_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
@@ -25,17 +26,9 @@ type Report struct {
 	Description string    `json:"description"`
 	Contact     string    `json:"contact"`
 	Status      string    `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`
+	CreatedAt   string `json:"created_at"`
 }
 
-type Response struct {
-	ID          int     
-	Title       string   
-	Description string   
-	Contact     string    
-	Status      string   
-	CreatedAt   time.Time
-}
 
 type User struct {
 	Email    string `json:"email"`
@@ -162,24 +155,28 @@ func getReportsHandler(w http.ResponseWriter, r *http.Request) {
     }
     defer rows.Close()
 
-    var reports []Response
+    var reports []Report
 
     for rows.Next() {
-        var report Response
-        // adjust fields here depending on your Response struct definition
-	err := rows.Scan(
-	    &report.ID,
-	    &report.Title,
-	    &report.Description,
-	    &report.Contact,
-	    &report.Status,
-	    &report.CreatedAt,
-	)
-	if err != nil {
+        var report Report
+        var createdAt time.Time // Use time.Time for timestamp
+        
+        err := rows.Scan(
+            &report.ID,
+            &report.Title,
+            &report.Description,
+            &report.Contact,
+            &report.Status,
+            &createdAt, // Scan into time.Time
+        )
+        if err != nil {
             log.Println("Error scanning row:", err)
             http.Error(w, "Database error", http.StatusInternalServerError)
             return
         }
+        
+        // Convert to ISO 8601 format for JavaScript
+        report.CreatedAt = createdAt.Format(time.RFC3339)
         reports = append(reports, report)
     }
 
@@ -195,7 +192,6 @@ func getReportsHandler(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-// POST /register
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 	var u User
 	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
@@ -209,7 +205,8 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	if !isTechnischoolsEmail(u.Email) {
-		http.Error(w, "Domen not allowed: ", http.StatusBadRequest)
+	http.Error(w, "Domain not allowed", http.StatusBadRequest)
+	return
 	}
 	hashed, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -227,7 +224,6 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "User registered"})
 }
 
-// POST /login
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var u User
 	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
@@ -257,6 +253,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 
 
+
 func isTechnischoolsEmail(email string) bool {
 	_, err := mail.ParseAddress(email)
 	if err != nil {
@@ -265,7 +262,6 @@ func isTechnischoolsEmail(email string) bool {
 
 	return strings.HasSuffix(strings.ToLower(email), "@technischools.com")
 }
-
 
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -282,4 +278,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+
+
 

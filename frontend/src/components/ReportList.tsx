@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 interface Report {
-  id: string;
+  id?: string;
   title: string;
   description: string;
   contact?: string;
@@ -13,13 +13,40 @@ const ReportList: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Robust date formatting function
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "Brak daty";
+    
+    const date = new Date(dateString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn("Invalid date:", dateString);
+      return "Nieprawidłowa data";
+    }
+    
+    return date.toLocaleString('pl-PL', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   const fetchReports = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:3000/api/v1/reports"); // GET wszystkich raportów
+      const res = await fetch("http://localhost:3000/api/v1/reports");
       if (!res.ok) throw new Error("Błąd przy pobieraniu raportów");
       const data = await res.json();
+      
+      // Log dates for debugging
+      data.forEach((report: Report, index: number) => {
+        console.log(`Report ${index}:`, report.createdAt, new Date(report.createdAt));
+      });
+      
       setReports(data);
     } catch (err: any) {
       setError(err.message || "Nie udało się pobrać raportów");
@@ -29,7 +56,7 @@ const ReportList: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchReports(); // pobranie raportów przy montowaniu komponentu
+    fetchReports();
   }, []);
 
   return (
@@ -38,7 +65,6 @@ const ReportList: React.FC = () => {
         📄 Lista raportów
       </h2>
 
-      {/* Przycisk odświeżania */}
       <button
         onClick={fetchReports}
         disabled={loading}
@@ -71,9 +97,9 @@ const ReportList: React.FC = () => {
       )}
 
       <ul style={{ listStyle: "none", padding: 0 }}>
-        {reports.map((report) => (
+        {reports.map((report, index) => (
           <li
-            key={report.id}
+            key={report.id ?? index}
             style={{
               padding: "1rem",
               marginBottom: "1rem",
@@ -86,7 +112,7 @@ const ReportList: React.FC = () => {
             <p>{report.description}</p>
             {report.contact && <p>Kontakt: {report.contact}</p>}
             <small style={{ color: "#606c38" }}>
-              Utworzono: {new Date(report.createdAt).toLocaleString()}
+              Utworzono: {formatDate(report.createdAt)}
             </small>
           </li>
         ))}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Header from "./components/Header";
 import InfoSection from "./components/InfoSection";
 import ReportForm from "./components/ReportForm";
