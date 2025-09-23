@@ -58,7 +58,7 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(corsMiddleware)
 	// Report endpoints
-	r.Route("/api/v1", func(r chi.Router) {
+	r.Route("/v1", func(r chi.Router) {
 	    r.Post("/report", createReportHandler)
 	    r.Get("/status/{id}", getStatusHandler)
 	    r.Post("/register", registerHandler)
