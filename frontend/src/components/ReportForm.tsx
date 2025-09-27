@@ -17,7 +17,7 @@ const ReportForm: React.FC = () => {
     }
 
     try {
-      const response = await fetch("/api/v1/report", {
+      const response = await fetch("http://localhost:3000/v1/report", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
