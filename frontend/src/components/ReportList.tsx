@@ -38,7 +38,9 @@ const ReportList: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/v1/reports");
+      // const res = await fetch("/api/v1/reports");
+      const res = await fetch("http://localhost:3000/v1/reports");
+
       if (!res.ok) throw new Error("Błąd przy pobieraniu raportów");
       const data = await res.json();
       
